@@ -1,144 +1,98 @@
-import './cors-redirect';
-import './App.css';
-import { initStrudel, note, hush, evalScope, getAudioContext, webaudioOutput, registerSynthSounds, initAudioOnFirstClick, transpiler } from "@strudel/web";
-import { useEffect, useRef } from "react";
-import { StrudelMirror } from '@strudel/codemirror';
-import { registerSoundfonts } from '@strudel/soundfonts';
-import { stranger_tune } from './tunes';
-
-let globalEditor = null;
-
-
-
-export function SetupButtons() {
-
-  document.getElementById('play').addEventListener('click', () => globalEditor.evaluate());
-  document.getElementById('stop').addEventListener('click', () => globalEditor.stop());
-  document.getElementById('process').addEventListener('click', () => {
-    Proc()
-  }
-  )
-  document.getElementById('process_play').addEventListener('click', () => {
-    if (globalEditor != null) {
-      Proc()
-      globalEditor.evaluate()
-    }
-  }
-  )
-}
-
-
-
-export function ProcAndPlay() {
-  if (globalEditor != null && globalEditor.repl.state.started == true) {
-    console.log(globalEditor)
-    Proc()
-    globalEditor.evaluate();
-  }
-}
-
-export function Proc() {
-
-  let proc_text = document.getElementById('proc').value
-  let proc_text_replaced = proc_text.replaceAll('<p1_Radio>', ProcessText);
-  ProcessText(proc_text);
-  globalEditor.setCode(proc_text_replaced)
-}
-
-export function ProcessText(match, ...args) {
-
-  let replace = ""
-  if (document.getElementById('flexRadioDefault2').checked) {
-    replace = "_"
-  }
-
-  return replace
-}
+import "./cors-redirect";
+import { useEffect } from "react";
+import { stranger_tune } from "./tunes";
+import { useStrudel } from "./hooks/useStrudel";
+import { useTextProcessor } from "./hooks/useTextProcessor";
+import { ControlPanel } from "./components/ControlPanel";
+import { TextProcessor } from "./components/TextProcessor";
+import { StrudelEditor } from "./components/StrudelEditor";
+import { RadioOptions } from "./components/RadioOptions";
+import { Header } from "./components/Header";
 
 export default function StrudelDemo() {
-
-  const hasRun = useRef(false);
+  const { isInitialized, isPlaying, play, stop, setCode, restartPlayback } =
+    useStrudel();
+  const {
+    text,
+    isHushMode,
+    processText,
+    handleTextChange,
+    handleHushModeChange,
+  } = useTextProcessor();
 
   useEffect(() => {
-
-    if (!hasRun.current) {
-      hasRun.current = true;
-      (async () => {
-        await initStrudel();
-
-        globalEditor = new StrudelMirror({
-          defaultOutput: webaudioOutput,
-          getTime: () => getAudioContext().currentTime,
-          transpiler,
-          root: document.getElementById('editor'),
-          prebake: async () => {
-            initAudioOnFirstClick(); // needed to make the browser happy (don't await this here..)
-            const loadModules = evalScope(
-              import('@strudel/core'),
-              import('@strudel/draw'),
-              import('@strudel/mini'),
-              import('@strudel/tonal'),
-              import('@strudel/webaudio'),
-            );
-            await Promise.all([loadModules, registerSynthSounds(), registerSoundfonts()]);
-          },
-        });
-        Proc()
-      })();
-      document.getElementById('proc').value = stranger_tune
-      SetupButtons()
+    if (isInitialized && !text) {
+      handleTextChange(stranger_tune);
     }
+  }, [isInitialized, text, handleTextChange]);
 
-  }, []);
+  useEffect(() => {
+    if (isInitialized && text) {
+      const processedText = processText(text);
+      setCode(processedText);
+    }
+  }, [isInitialized, text, isHushMode, processText, setCode]);
 
+  const handleProcess = () => {
+    const processedText = processText(text);
+    setCode(processedText);
+  };
+
+  const handleProcessAndPlay = () => {
+    const processedText = processText(text);
+    setCode(processedText);
+
+    play();
+  };
+
+  const handlePlay = () => {
+    const processedText = processText(text);
+    setCode(processedText);
+    play();
+  };
+
+  const handleModeChange = (hushMode) => {
+    const wasPlaying = isPlaying;
+    handleHushModeChange(hushMode);
+    const processedText = processText(text);
+    setCode(processedText);
+
+    // if it was playing, restart playback with new code
+    if (wasPlaying) {
+      setTimeout(() => {
+        restartPlayback(wasPlaying);
+      }, 100);
+    }
+  };
 
   return (
-    <div>
-      <h2>Strudel Demo</h2>
-      <main>
-
-        <div className="container-fluid">
-          <div className="row">
-            <div className="col-md-8" style={{ maxHeight: '50vh', overflowY: 'auto' }}>
-              <label htmlFor="exampleFormControlTextarea1" className="form-label">Text to preprocess:</label>
-              <textarea className="form-control" rows="15" id="proc" ></textarea>
-            </div>
-            <div className="col-md-4">
-
-              <nav>
-                <button id="process" className="btn btn-outline-primary">Preprocess</button>
-                <button id="process_play" className="btn btn-outline-primary">Proc & Play</button>
-                <br />
-                <button id="play" className="btn btn-outline-primary">Play</button>
-                <button id="stop" className="btn btn-outline-primary">Stop</button>
-              </nav>
-            </div>
+    <div className="min-h-screen bg-background text-foreground">
+      <div className="container mx-auto p-6">
+        <Header
+          isInitialized={isInitialized}
+          isHushMode={isHushMode}
+          isPlaying={isPlaying}
+        />
+        <main className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <TextProcessor text={text} onTextChange={handleTextChange} />
+            <ControlPanel
+              onProcess={handleProcess}
+              onProcessAndPlay={handleProcessAndPlay}
+              onPlay={handlePlay}
+              onStop={stop}
+            />
           </div>
-          <div className="row">
-            <div className="col-md-8" style={{ maxHeight: '50vh', overflowY: 'auto' }}>
-              <div id="editor" />
-            </div>
-            <div className="col-md-4">
-              <div className="form-check">
-                <input className="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault1" onChange={ProcAndPlay} defaultChecked />
-                <label className="form-check-label" htmlFor="flexRadioDefault1">
-                  p1: ON
-                </label>
-              </div>
-              <div className="form-check">
-                <input className="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault2" onChange={ProcAndPlay} />
-                <label className="form-check-label" htmlFor="flexRadioDefault2">
-                  p1: HUSH
-                </label>
-              </div>
-            </div>
-          </div>
-        </div>
 
-      </main >
-    </div >
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <StrudelEditor />
+            <RadioOptions
+              isHushMode={isHushMode}
+              onModeChange={handleModeChange}
+            />
+          </div>
+        </main>
+      </div>
+    </div>
   );
-
-
 }
-
