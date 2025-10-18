@@ -66,33 +66,31 @@ export default function StrudelDemo() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <div className="container mx-auto p-6">
-        <Header
-          isInitialized={isInitialized}
-          isHushMode={isHushMode}
-          isPlaying={isPlaying}
-        />
-        <main className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <TextProcessor text={text} onTextChange={handleTextChange} />
-            <ControlPanel
-              onProcess={handleProcess}
-              onProcessAndPlay={handleProcessAndPlay}
-              onPlay={handlePlay}
-              onStop={stop}
-            />
-          </div>
+    <div className="flex h-screen flex-col bg-background">
+      <Header
+        isInitialized={isInitialized}
+        isHushMode={isHushMode}
+        isPlaying={isPlaying}
+      />
+      <main className="space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <TextProcessor text={text} onTextChange={handleTextChange} />
+          <ControlPanel
+            onProcess={handleProcess}
+            onProcessAndPlay={handleProcessAndPlay}
+            onPlay={handlePlay}
+            onStop={stop}
+          />
+        </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <StrudelEditor />
-            <RadioOptions
-              isHushMode={isHushMode}
-              onModeChange={handleModeChange}
-            />
-          </div>
-        </main>
-      </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <StrudelEditor />
+          <RadioOptions
+            isHushMode={isHushMode}
+            onModeChange={handleModeChange}
+          />
+        </div>
+      </main>
     </div>
   );
 }
