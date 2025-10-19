@@ -4,10 +4,9 @@ import { stranger_tune } from "./tunes";
 import { useStrudel } from "./hooks/useStrudel";
 import { useTextProcessor } from "./hooks/useTextProcessor";
 import { ControlPanel } from "./components/ControlPanel";
-import { TextProcessor } from "./components/TextProcessor";
 import { StrudelEditor } from "./components/StrudelEditor";
-import { RadioOptions } from "./components/RadioOptions";
 import { Header } from "./components/Header";
+import { PreprocessView } from "./components/PreprocessView";
 
 export default function StrudelDemo() {
   const { isInitialized, isPlaying, play, stop, setCode, restartPlayback } =
@@ -68,29 +67,22 @@ export default function StrudelDemo() {
   return (
     <div className="flex h-screen flex-col bg-background">
       <Header
-        isInitialized={isInitialized}
         isHushMode={isHushMode}
         isPlaying={isPlaying}
+        onModeChange={handleModeChange}
       />
-      <main className="space-y-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <TextProcessor text={text} onTextChange={handleTextChange} />
-          <ControlPanel
-            onProcess={handleProcess}
-            onProcessAndPlay={handleProcessAndPlay}
-            onPlay={handlePlay}
-            onStop={stop}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <StrudelEditor />
-          <RadioOptions
-            isHushMode={isHushMode}
-            onModeChange={handleModeChange}
-          />
-        </div>
+      <main className="flex flex-1 flex-col gap-3 overflow-hidden p-3 md:flex-row md:gap-4 md:p-4">
+        <PreprocessView text={text} onTextChange={handleTextChange} />
+        <StrudelEditor />
       </main>
+
+      <ControlPanel
+        onProcess={handleProcess}
+        onProcessAndPlay={handleProcessAndPlay}
+        onPlay={handlePlay}
+        onStop={stop}
+        isPlaying={isPlaying}
+      />
     </div>
   );
 }
