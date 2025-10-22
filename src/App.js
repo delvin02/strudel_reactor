@@ -7,9 +7,10 @@ import { ControlPanel } from "./components/ControlPanel";
 import { StrudelEditor } from "./components/StrudelEditor";
 import { Header } from "./components/Header";
 import { PreprocessView } from "./components/PreprocessView";
+import { SpectrogramView } from "./components/SpectrogramView";
 
 export default function StrudelDemo() {
-  const { isInitialized, isPlaying, play, stop, setCode, restartPlayback } =
+  const { isInitialized, isPlaying, play, stop, setCode, analyser, restartPlayback } =
     useStrudel();
   const {
     text,
@@ -44,10 +45,14 @@ export default function StrudelDemo() {
     play();
   };
 
-  const handlePlay = () => {
+  const handlePlay = async () => {
+    // pre-process first
     const processedText = processText(text);
+    // set the processed code
     setCode(processedText);
-    play();
+
+    // then play
+    await play();
   };
 
   const handleModeChange = (hushMode) => {
@@ -75,7 +80,7 @@ export default function StrudelDemo() {
         <PreprocessView text={text} onTextChange={handleTextChange} />
         <StrudelEditor />
       </main>
-
+      <SpectrogramView analyser={analyser}/>
       <ControlPanel
         onProcess={handleProcess}
         onProcessAndPlay={handleProcessAndPlay}

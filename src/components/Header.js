@@ -5,7 +5,7 @@ import { Label } from "./ui/label";
 export function Header({ isHushMode, isPlaying, onModeChange }) {
   return (
     <header className="flex items-center justify-between border-b border-border bg-card px-6 py-3">
-      <div class="flex items-center gap-2">
+      <div className="flex items-center gap-2">
         <h2 className="text-3xl font-bold">Strudel Demo</h2>
         <Badge
           variant={isPlaying ? "default" : "outline"}
