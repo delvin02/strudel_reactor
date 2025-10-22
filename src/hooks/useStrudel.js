@@ -1,14 +1,13 @@
 import { useEffect, useRef, useState } from "react";
+import { StrudelMirror } from "@strudel/codemirror";
+import { evalScope } from "@strudel/core";
+import { initAudioOnFirstClick } from "@strudel/webaudio";
+import { transpiler } from "@strudel/transpiler";
 import {
-  initStrudel,
-  evalScope,
   getAudioContext,
   webaudioOutput,
   registerSynthSounds,
-  initAudioOnFirstClick,
-  transpiler,
-} from "@strudel/web";
-import { StrudelMirror } from "@strudel/codemirror";
+} from "@strudel/webaudio";
 import { registerSoundfonts } from "@strudel/soundfonts";
 
 export function useStrudel() {
@@ -21,8 +20,6 @@ export function useStrudel() {
     if (!hasRun.current) {
       hasRun.current = true;
       (async () => {
-        await initStrudel();
-
         const strudelEditor = new StrudelMirror({
           defaultOutput: webaudioOutput,
           getTime: () => getAudioContext().currentTime,
@@ -51,10 +48,11 @@ export function useStrudel() {
     }
   }, []);
 
-  const play = () => {
+  const play = async () => {
     if (editor) {
       try {
-        editor.evaluate();
+        console.log("evaluate");
+        await editor.evaluate();
         setIsPlaying(true);
       } catch (error) {
         console.error("Error playing Strudel code:", error);

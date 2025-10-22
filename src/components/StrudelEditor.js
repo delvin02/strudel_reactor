@@ -7,7 +7,7 @@ export function StrudelEditor() {
       <div className="flex-1 overflow-hidden p-4">
         <div
           id="editor"
-          className="h-full resize-none border-0 bg-transparent font-mono text-xs leading-relaxed focus-visible:ring-0 sm:text-sm"
+          className="h-full resize-none border-0 bg-transparent font-mono text-xs leading-relaxed focus-visible:ring-0 sm:text-sm overflow-y-auto"
         />
       </div>
     </div>

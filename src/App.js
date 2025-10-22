@@ -7,10 +7,9 @@ import { ControlPanel } from "./components/ControlPanel";
 import { StrudelEditor } from "./components/StrudelEditor";
 import { Header } from "./components/Header";
 import { PreprocessView } from "./components/PreprocessView";
-import { SpectrogramView } from "./components/SpectrogramView";
 
 export default function StrudelDemo() {
-  const { isInitialized, isPlaying, play, stop, setCode, analyser, restartPlayback } =
+  const { isInitialized, isPlaying, play, stop, setCode, restartPlayback } =
     useStrudel();
   const {
     text,
@@ -70,7 +69,7 @@ export default function StrudelDemo() {
   };
 
   return (
-    <div className="flex h-screen flex-col bg-background">
+    <div className="flex h-screen flex-col bg-background overflow-hidden">
       <Header
         isHushMode={isHushMode}
         isPlaying={isPlaying}
@@ -80,7 +79,7 @@ export default function StrudelDemo() {
         <PreprocessView text={text} onTextChange={handleTextChange} />
         <StrudelEditor />
       </main>
-      <SpectrogramView analyser={analyser}/>
+
       <ControlPanel
         onProcess={handleProcess}
         onProcessAndPlay={handleProcessAndPlay}
