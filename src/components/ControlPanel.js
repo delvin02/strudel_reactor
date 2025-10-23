@@ -4,8 +4,6 @@ import { Label } from "./ui/label";
 import { Slider } from "./ui/slider";
 
 export function ControlPanel({
-  onProcess,
-  onProcessAndPlay,
   onPlay,
   onStop,
   isPlaying,
@@ -32,7 +30,7 @@ export function ControlPanel({
               className="w-full"
             />
           </div>
-          
+
           <div className="flex flex-col gap-2 min-w-32">
             <Label className="text-sm font-medium text-center">
               Bass: {bass}
@@ -47,7 +45,7 @@ export function ControlPanel({
             />
           </div>
         </div>
-        
+
         {/* Play/Stop Button */}
         <div className="flex items-center justify-center">
           {isPlaying ? (

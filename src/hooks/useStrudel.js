@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { StrudelMirror } from "@strudel/codemirror";
 import { evalScope } from "@strudel/core";
 import { initAudioOnFirstClick } from "@strudel/webaudio";
@@ -48,7 +48,7 @@ export function useStrudel() {
     }
   }, []);
 
-  const play = async () => {
+  const play = useCallback(async () => {
     if (editor) {
       try {
         console.log("evaluate");
@@ -59,20 +59,20 @@ export function useStrudel() {
         setIsPlaying(false);
       }
     }
-  };
+  }, [editor]);
 
-  const stop = () => {
+  const stop = useCallback(() => {
     if (editor) {
       editor.stop();
       setIsPlaying(false);
     }
-  };
+  }, [editor]);
 
-  const setCode = (code) => {
+  const setCode = useCallback((code) => {
     if (editor) editor.setCode(code);
-  };
+  }, [editor]);
 
-  const restartPlayback = (wasPlaying = false) => {
+  const restartPlayback = useCallback((wasPlaying = false) => {
     if (editor) {
       try {
         // stop current playback if it was playing
@@ -87,7 +87,7 @@ export function useStrudel() {
         setIsPlaying(false);
       }
     }
-  };
+  }, [editor]);
 
   return {
     editor,
