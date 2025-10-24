@@ -10,7 +10,7 @@ import { PreprocessView } from "./components/PreprocessView";
 import { ConsoleLogView } from "./components/ConsoleLogView";
 import BarGraphPanel from "./components/BarGraphPanel";
 
-const MAX_LOGS = 200;
+const MAX_LOGS = 20;
 
 export default function StrudelDemo() {
   const { isInitialized, isPlaying, play, stop, setCode, restartPlayback } =
@@ -26,6 +26,7 @@ export default function StrudelDemo() {
   const [pattern, setPattern] = useState(0);
   const [bass, setBass] = useState(0);
   const [showConsoleView, setConsoleView] = useState(true);
+  const [showBarGraph, setShowBarGraph] = useState(true);
   const [consoleLogs, setConsoleLogs] = useState([]);
   const throttleRef = useRef(null);
   const logBatchRef = useRef([]);
@@ -203,7 +204,7 @@ export default function StrudelDemo() {
           </div>
         )}
       </main>
-      <BarGraphPanel isPlaying={isPlaying} />
+      {showBarGraph && <BarGraphPanel isPlaying={isPlaying} />}
 
       <ControlPanel
         onPlay={handlePlay}
@@ -213,6 +214,8 @@ export default function StrudelDemo() {
         bass={bass}
         onPatternChange={setPattern}
         onBassChange={setBass}
+        showBarGraph={showBarGraph}
+        setShowBarGraph={setShowBarGraph}
       />
     </div>
   );

@@ -31,20 +31,28 @@ export default function BarGraphPanel({ isPlaying }) {
     const limitedData = dataArray.slice(-50);
 
     return limitedData.map((item, index) => {
-      const matches = item.match(
-        /gain:([\d.]+).*postgain:([\d.]+).*hcutoff:([\d.]+).*speed:([\d.]+).*duration:([\d.]+)/,
-      );
+      const gainMatch = item.match(/gain:([\d.]+)/);
+      const postgainMatch = item.match(/postgain:([\d.]+)/);
+      const hcutoffMatch = item.match(/hcutoff:([\d.]+)/);
+      const speedMatch = item.match(/speed:([\d.]+)/);
+      const durationMatch = item.match(/duration:([\d.]+)/);
 
-      if (!matches) {
-        // Use a stable key (index) for the data join
+      // use the matched value, or default to 0 if not found
+      const gain = parseFloat(gainMatch ? gainMatch[1] : 0) || 0;
+      const postgain = parseFloat(postgainMatch ? postgainMatch[1] : 0) || 0;
+      const hcutoff = parseFloat(hcutoffMatch ? hcutoffMatch[1] : 0) || 0;
+      const speed = parseFloat(speedMatch ? speedMatch[1] : 0) || 0;
+      const duration = parseFloat(durationMatch ? durationMatch[1] : 0) || 0;
+
+      if (
+        gain === 0 &&
+        postgain === 0 &&
+        hcutoff === 0 &&
+        speed === 0 &&
+        duration === 0
+      ) {
         return { key: index, compositeValue: 0 };
       }
-
-      const gain = parseFloat(matches[1]) || 0;
-      const postgain = parseFloat(matches[2]) || 0;
-      const hcutoff = parseFloat(matches[3]) || 0;
-      const speed = parseFloat(matches[4]) || 0;
-      const duration = parseFloat(matches[5]) || 0;
 
       const compositeValue = Math.round(
         Math.min(
@@ -68,6 +76,7 @@ export default function BarGraphPanel({ isPlaying }) {
 
   // Effect for Subscribing to data
   useEffect(() => {
+    console.log("here");
     if (!isPlaying) {
       dataRef.current = []; // Clear data when stopped
       return;
@@ -80,6 +89,7 @@ export default function BarGraphPanel({ isPlaying }) {
 
     // Get initial data on play
     const initialData = getD3Data();
+    console.log("getting data", initialData);
     if (initialData && initialData.length > 0) {
       dataRef.current = parseConsoleData(initialData);
     }
@@ -256,13 +266,13 @@ export default function BarGraphPanel({ isPlaying }) {
           onClick={() => setAnimationSpeed(Math.max(0.5, animationSpeed - 0.5))}
           className="px-3 py-1 text-xs rounded bg-gray-700 text-gray-300"
         >
-          Slower
+          Decrease Animation Speed
         </button>
         <button
           onClick={() => setAnimationSpeed(Math.min(3, animationSpeed + 0.5))}
           className="px-3 py-1 text-xs rounded bg-gray-700 text-gray-300"
         >
-          Faster
+          Increase Animation Speed
         </button>
       </div>
 

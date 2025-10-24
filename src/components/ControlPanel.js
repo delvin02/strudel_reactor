@@ -1,4 +1,4 @@
-import { Play, Square } from "lucide-react";
+import { ChartColumn, Play, Square } from "lucide-react";
 import { Button } from "./ui/button";
 import { Label } from "./ui/label";
 import { Slider } from "./ui/slider";
@@ -11,10 +11,23 @@ export function ControlPanel({
   bass,
   onPatternChange,
   onBassChange,
+  showBarGraph,
+  setShowBarGraph,
 }) {
   return (
     <footer className="border-t border-border bg-card">
       <div className="flex flex-col gap-4 px-4 py-3 sm:px-6 sm:py-4">
+        <div className="flex items-center justify-center">
+          <Button
+            variant={showBarGraph ? "destructive" : "outline"}
+            size="sm"
+            onClick={() => setShowBarGraph(!showBarGraph)}
+          >
+            <ChartColumn className="h-4 w-4" />
+            {showBarGraph ? "Hide " : "Show "}
+            Bar Graph
+          </Button>
+        </div>
         {/* Pattern and Bass Controls */}
         <div className="flex items-center justify-center gap-6">
           <div className="flex flex-col gap-2 min-w-32">
@@ -45,7 +58,6 @@ export function ControlPanel({
             />
           </div>
         </div>
-
         {/* Play/Stop Button */}
         <div className="flex items-center justify-center">
           {isPlaying ? (
