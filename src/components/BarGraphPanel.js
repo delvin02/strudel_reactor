@@ -1,137 +1,33 @@
 import { useRef, useEffect, useCallback, useState } from "react";
 import * as d3 from "d3";
-import { select, scaleSequential, scaleLinear, scaleBand } from "d3";
-import {
-  interpolateRainbow,
-  interpolateViridis,
-  interpolatePlasma,
-} from "d3-scale-chromatic";
 import { getD3Data, subscribe, unsubscribe } from "../console-monkey-patch";
+import { getColorScale } from "../lib/utils";
 
 export default function BarGraphPanel({ isPlaying }) {
   const svgRef = useRef(null);
+
+  // For the requestAnimationFrame loop
   const animationRef = useRef(null);
+
+  // Holds the current data piped
+  const dataRef = useRef([]);
+  const dimensionsRef = useRef({ width: 800, height: 320 });
+  const yScaleRef = useRef(null);
+  const colorScaleRef = useRef(null);
+
   const [colorScheme, setColorScheme] = useState("rainbow");
   const [animationSpeed, setAnimationSpeed] = useState(1);
 
-  const clearBars = (svg) => {
-    if (svg) {
-      svg.selectAll("rect").remove();
-    }
-  };
+  // Update the color scale ref whenever the state changes
+  useEffect(() => {
+    colorScaleRef.current = getColorScale(colorScheme);
+  }, [colorScheme]);
 
-  const getColorScale = (scheme) => {
-    switch (scheme) {
-      case "rainbow":
-        return scaleSequential(interpolateRainbow).domain([0, 1]);
-      case "viridis":
-        return scaleSequential(interpolateViridis).domain([0, 1]);
-      case "plasma":
-        return scaleSequential(interpolatePlasma).domain([0, 1]);
-      default:
-        return scaleSequential(interpolateRainbow).domain([0, 1]);
-    }
-  };
-
-  const renderBars = (svg, data, containerWidth, containerHeight) => {
-    if (
-      !data ||
-      data.length === 0 ||
-      !svg ||
-      !containerWidth ||
-      !containerHeight
-    ) {
-      return;
-    }
-
-    // Clear previous content
-    clearBars(svg);
-
-    // Set up scales
-    const colorScale = getColorScale(colorScheme);
-    const y = scaleLinear().domain([0, 1]).range([containerHeight, 0]);
-    const x = scaleBand()
-      .domain(data.map((d, i) => i))
-      .range([0, containerWidth])
-      .paddingInner(0.1)
-      .paddingOuter(0.1);
-
-    // Create bars
-    svg
-      .selectAll("rect")
-      .data(data)
-      .enter()
-      .append("rect")
-      .attr("x", (d, i) => x(i))
-      .attr("width", x.bandwidth())
-      .attr("y", (d) => y(d.compositeValue / 255))
-      .attr("height", (d) => containerHeight - y(d.compositeValue / 255))
-      .attr("fill", (d) => {
-        const normalizedValue = d.compositeValue / 255;
-        return colorScale(normalizedValue);
-      })
-      .attr("opacity", (d) => 0.6 + (d.compositeValue / 255) * 0.4);
-  };
-
-  const startAnimation = (svg, data, containerWidth, containerHeight) => {
-    if (!data || data.length === 0 || !svg || !isPlaying) return;
-
-    const colorScale = getColorScale(colorScheme);
-    const y = scaleLinear().domain([0, 1]).range([containerHeight, 0]);
-
-    const animate = () => {
-      if (!isPlaying) {
-        // Stop animation if not playing
-        if (animationRef.current) {
-          cancelAnimationFrame(animationRef.current);
-          animationRef.current = null;
-        }
-        return;
-      }
-
-      const time = Date.now() * 0.001 * animationSpeed;
-
-      // Update bars with smooth transitions
-      svg
-        .selectAll("rect")
-        .data(data)
-        .transition()
-        .duration(50)
-        .ease(d3.easeQuadOut)
-        .attr("y", (d, i) => {
-          const waveOffset = Math.sin(time * 2 + i * 0.1) * 2;
-          const normalizedValue = d.compositeValue / 255;
-          return y(normalizedValue) + waveOffset;
-        })
-        .attr("height", (d, i) => {
-          const waveOffset = Math.sin(time * 2 + i * 0.1) * 2;
-          const normalizedValue = d.compositeValue / 255;
-          return Math.max(0, containerHeight - y(normalizedValue) - waveOffset);
-        })
-        .attr("fill", (d, i) => {
-          const colorShift = Math.sin(time * 1.5 + i * 0.05) * 0.1;
-          const normalizedValue = Math.max(
-            0,
-            Math.min(1, d.compositeValue / 255 + colorShift),
-          );
-          return colorScale(normalizedValue);
-        })
-        .attr("opacity", (d, i) => {
-          const opacityPulse = 0.7 + Math.sin(time * 3 + i * 0.1) * 0.3;
-          const baseOpacity = 0.6 + (d.compositeValue / 255) * 0.4;
-          return baseOpacity * opacityPulse;
-        });
-
-      // Continue animation
-      animationRef.current = requestAnimationFrame(animate);
-    };
-
-    animate();
-  };
-
+  // Data parsing function
   const parseConsoleData = useCallback((dataArray) => {
     if (!dataArray || dataArray.length === 0) return [];
 
+    // Get the last 50 items
     const limitedData = dataArray.slice(-50);
 
     return limitedData.map((item, index) => {
@@ -140,7 +36,8 @@ export default function BarGraphPanel({ isPlaying }) {
       );
 
       if (!matches) {
-        return { index, compositeValue: 0 };
+        // Use a stable key (index) for the data join
+        return { key: index, compositeValue: 0 };
       }
 
       const gain = parseFloat(matches[1]) || 0;
@@ -164,133 +61,159 @@ export default function BarGraphPanel({ isPlaying }) {
         ),
       );
 
-      return { index, compositeValue };
+      // Use `key` for the data join, `i` for array position
+      return { key: index, i: index, compositeValue };
     });
   }, []);
 
-  // Handle isPlaying changes
+  // Effect for Subscribing to data
   useEffect(() => {
-    const svgElement = svgRef.current;
-    if (!svgElement) return;
-
-    const svg = select(svgElement);
-
     if (!isPlaying) {
-      // Clear everything when not playing
-      clearBars(svg);
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-        animationRef.current = null;
-      }
+      dataRef.current = []; // Clear data when stopped
+      return;
     }
-  }, [isPlaying]);
 
-  // Real-time data subscription
+    // This handler only updates the data ref, it doesn't trigger renders
+    const handleD3Data = (event) => {
+      dataRef.current = parseConsoleData(event.detail);
+    };
+
+    // Get initial data on play
+    const initialData = getD3Data();
+    if (initialData && initialData.length > 0) {
+      dataRef.current = parseConsoleData(initialData);
+    }
+
+    subscribe("d3Data", handleD3Data);
+    return () => {
+      unsubscribe("d3Data", handleD3Data);
+    };
+  }, [isPlaying, parseConsoleData]);
+
+  // Effect for Resize handling and setting up scales
   useEffect(() => {
     const svgElement = svgRef.current;
     if (!svgElement) return;
 
-    const containerWidth = window.innerWidth || svgElement.clientWidth || 800;
-    const containerHeight = svgElement.clientHeight || 320;
-    const svg = select(svgElement);
-    svg.attr("width", containerWidth).attr("height", containerHeight);
+    const svg = d3.select(svgElement);
 
-    const handleD3Data = (event) => {
-      if (!isPlaying) return;
+    // This observer updates dimensions and y-scale on resize
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (entry) {
+        const { width, height } = entry.contentRect;
+        dimensionsRef.current = { width, height };
+        svg.attr("width", width).attr("height", height);
 
-      const parsedData = parseConsoleData(event.detail);
-      if (parsedData && parsedData.length > 0) {
-        // Stop any existing animation
-        if (animationRef.current) {
-          cancelAnimationFrame(animationRef.current);
-          animationRef.current = null;
-        }
-
-        // Render bars and start animation
-        renderBars(svg, parsedData, containerWidth, containerHeight);
-        startAnimation(svg, parsedData, containerWidth, containerHeight);
+        // Y scale is dependent on height
+        yScaleRef.current = d3.scaleLinear().domain([0, 1]).range([height, 0]);
       }
-    };
+    });
 
-    // Only subscribe when playing
-    if (isPlaying) {
-      subscribe("d3Data", handleD3Data);
-
-      // Get initial data if available
-      const initialData = getD3Data();
-      if (initialData && initialData.length > 0) {
-        const parsedData = parseConsoleData(initialData);
-        renderBars(svg, parsedData, containerWidth, containerHeight);
-        startAnimation(svg, parsedData, containerWidth, containerHeight);
-      }
-    }
+    // Observe the parent element for resizing
+    observer.observe(svgElement.parentElement);
 
     return () => {
-      // always unsubscribe to prevent multiple listeners
-      unsubscribe("d3Data", handleD3Data);
+      observer.disconnect();
+    };
+  }, []); // Runs once on mount
+
+  // Effect for the Animation Loop
+  useEffect(() => {
+    if (!isPlaying) {
+      // Stop loop and clear SVG if not playing
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
+      }
+      d3.select(svgRef.current).selectAll("rect").remove();
+      return;
+    }
+
+    const svg = d3.select(svgRef.current);
+
+    // this is the main animation loop
+    const animate = () => {
+      // set current state from refs
+      const data = dataRef.current;
+      const { width, height } = dimensionsRef.current;
+      const y = yScaleRef.current;
+      const colorScale = colorScaleRef.current;
+
+      // wait if scales or data aren't ready
+      if (!y || !colorScale || !data) {
+        animationRef.current = requestAnimationFrame(animate);
+        return;
+      }
+
+      const time = Date.now() * 0.001 * animationSpeed;
+
+      // X scale is calculated here because its domain depends on the data
+      const x = d3
+        .scaleBand()
+        .domain(data.map((d) => d.key))
+        .range([0, width])
+        .paddingInner(0.1)
+        .paddingOuter(0.1);
+
+      svg
+        .selectAll("rect")
+        .data(data, (d) => d.key)
+        .join(
+          (enter) =>
+            enter
+              .append("rect")
+              .attr("x", (d) => x(d.key))
+              .attr("width", x.bandwidth())
+              .attr("y", (d) => y(d.compositeValue / 255))
+              .attr("height", (d) => height - y(d.compositeValue / 255)),
+
+          (update) => update,
+
+          (exit) => exit.remove(),
+        )
+
+        .attr("width", x.bandwidth())
+        .attr("x", (d) => x(d.key))
+        .attr("y", (d, i) => {
+          const waveOffset = Math.sin(time * 2 + i * 0.1) * 2;
+          const normalizedValue = d.compositeValue / 255;
+          return y(normalizedValue) + waveOffset;
+        })
+        .attr("height", (d, i) => {
+          const waveOffset = Math.sin(time * 2 + i * 0.1) * 2;
+          const normalizedValue = d.compositeValue / 255;
+          return Math.max(0, height - y(normalizedValue) - waveOffset);
+        })
+        .attr("fill", (d, i) => {
+          const colorShift = Math.sin(time * 1.5 + i * 0.05) * 0.1;
+          const normalizedValue = Math.max(
+            0,
+            Math.min(1, d.compositeValue / 255 + colorShift),
+          );
+          return colorScale(normalizedValue);
+        })
+        .attr("opacity", (d, i) => {
+          const opacityPulse = 0.7 + Math.sin(time * 3 + i * 0.1) * 0.3;
+          const baseOpacity = 0.6 + (d.compositeValue / 255) * 0.4;
+          return baseOpacity * opacityPulse;
+        });
+
+      // continue the loop
+      animationRef.current = requestAnimationFrame(animate);
+    };
+
+    // start the animation loop
+    animate();
+
+    // cleansup - stop the loop when dependencies changed
+    return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
         animationRef.current = null;
       }
     };
-  }, [isPlaying, parseConsoleData]);
-
-  // Window resize handler
-  useEffect(() => {
-    let resizeTimeout;
-
-    const handleResize = () => {
-      if (resizeTimeout) clearTimeout(resizeTimeout);
-
-      resizeTimeout = setTimeout(() => {
-        const svgElement = svgRef.current;
-        if (svgElement && isPlaying) {
-          const containerWidth =
-            window.innerWidth || svgElement.clientWidth || 800;
-          const containerHeight = svgElement.clientHeight || 320;
-          const svg = select(svgElement);
-          svg.attr("width", containerWidth).attr("height", containerHeight);
-
-          // Re-render with current data
-          const currentData = getD3Data();
-          if (currentData && currentData.length > 0) {
-            const parsedData = parseConsoleData(currentData);
-            renderBars(svg, parsedData, containerWidth, containerHeight);
-            startAnimation(svg, parsedData, containerWidth, containerHeight);
-          }
-        }
-      }, 100);
-    };
-
-    // Only add resize listener when playing
-    if (isPlaying) {
-      window.addEventListener("resize", handleResize);
-    }
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      if (resizeTimeout) {
-        clearTimeout(resizeTimeout);
-      }
-    };
-  }, [isPlaying, parseConsoleData]);
-
-  // Cleanup effect to prevent memory leaks
-  useEffect(() => {
-    return () => {
-      // Clean up all event listeners and animations on unmount
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-        animationRef.current = null;
-      }
-      // Clear any remaining bars
-      const svgElement = svgRef.current;
-      if (svgElement) {
-        const svg = select(svgElement);
-        clearBars(svg);
-      }
-    };
-  }, []);
+  }, [isPlaying, animationSpeed]);
 
   return (
     <div className="w-full h-80 bg-black relative">

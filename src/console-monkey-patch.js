@@ -15,7 +15,7 @@ export default function console_monkey_patch() {
       //Then remove the oldest values once we've hit 100.
       logArray.push(args.join(" ").replace("%c[hap] ", ""));
 
-      if (logArray.length > 100) {
+      if (logArray.length > 150) {
         logArray.splice(0, 1);
       }
       //Dispatch a customevent we can listen to in App.js
