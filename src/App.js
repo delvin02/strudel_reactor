@@ -1,5 +1,5 @@
 import "./cors-redirect";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { stranger_tune } from "./tunes";
 import { useStrudel } from "./hooks/useStrudel";
 import { useTextProcessor } from "./hooks/useTextProcessor";
@@ -8,6 +8,9 @@ import { StrudelEditor } from "./components/StrudelEditor";
 import { Header } from "./components/Header";
 import { PreprocessView } from "./components/PreprocessView";
 import { ConsoleLogView } from "./components/ConsoleLogView";
+import BarGraphPanel from "./components/BarGraphPanel";
+
+const MAX_LOGS = 200;
 
 export default function StrudelDemo() {
   const { isInitialized, isPlaying, play, stop, setCode, restartPlayback } =
@@ -22,8 +25,10 @@ export default function StrudelDemo() {
 
   const [pattern, setPattern] = useState(0);
   const [bass, setBass] = useState(0);
-
+  const [showConsoleView, setConsoleView] = useState(true);
   const [consoleLogs, setConsoleLogs] = useState([]);
+  const throttleRef = useRef(null);
+  const logBatchRef = useRef([]);
 
   useEffect(() => {
     if (isInitialized && !text) {
@@ -91,14 +96,31 @@ export default function StrudelDemo() {
     text,
   });
 
-  const addConsoleLog = (message, type = "log") => {
-    const newLog = {
+  // Advanced throttled version that batches console logs
+  const addConsoleLogThrottled = (message, type = "log") => {
+    // Add to batch
+    logBatchRef.current.push({
       id: Date.now() + Math.random(),
       message,
       type,
       timestamp: Date.now(),
-    };
-    setConsoleLogs((prev) => [...prev, newLog]);
+    });
+
+    // Clear existing timeout
+    if (throttleRef.current) {
+      clearTimeout(throttleRef.current);
+    }
+
+    // Set new timeout to process batch
+    throttleRef.current = setTimeout(() => {
+      if (logBatchRef.current.length > 0) {
+        setConsoleLogs((prev) => {
+          const updated = [...prev, ...logBatchRef.current];
+          return updated.length > MAX_LOGS ? updated.slice(-MAX_LOGS) : updated;
+        });
+        logBatchRef.current = []; // Clear batch
+      }
+    }, 100); // Reduced throttle to 100ms for better responsiveness
   };
 
   // capture console logs
@@ -110,22 +132,30 @@ export default function StrudelDemo() {
 
     console.log = (...args) => {
       originalLog(...args);
-      addConsoleLog(args.join(" "), "log");
+      // Only capture logs when playing
+      if (isPlaying) {
+        addConsoleLogThrottled(args.join(" "), "log");
+      }
     };
 
     console.error = (...args) => {
       originalError(...args);
-      addConsoleLog(args.join(" "), "error");
+      // Always capture errors
+      addConsoleLogThrottled(args.join(" "), "error");
     };
 
     console.warn = (...args) => {
       originalWarn(...args);
-      addConsoleLog(args.join(" "), "warn");
+      // Always capture warnings
+      addConsoleLogThrottled(args.join(" "), "warn");
     };
 
     console.info = (...args) => {
       originalInfo(...args);
-      addConsoleLog(args.join(" "), "info");
+      // Only capture info when playing
+      if (isPlaying) {
+        addConsoleLogThrottled(args.join(" "), "info");
+      }
     };
 
     return () => {
@@ -133,8 +163,14 @@ export default function StrudelDemo() {
       console.error = originalError;
       console.warn = originalWarn;
       console.info = originalInfo;
+
+      // Cleanup throttle timeout and batch
+      if (throttleRef.current) {
+        clearTimeout(throttleRef.current);
+      }
+      logBatchRef.current = [];
     };
-  }, []);
+  }, [isPlaying]);
 
   return (
     <div className="flex h-screen flex-col overflow-hidden">
@@ -144,6 +180,8 @@ export default function StrudelDemo() {
         onModeChange={handleModeChange}
         onPresetLoad={handlePresetLoad}
         getCurrentState={getCurrentState}
+        showConsoleView={showConsoleView}
+        setConsoleView={setConsoleView}
       />
       <main className="flex flex-1 flex-col gap-3 overflow-hidden p-3 md:flex-row md:gap-4 md:p-4">
         <div className="flex flex-1 flex-col gap-3 md:flex-row">
@@ -157,12 +195,15 @@ export default function StrudelDemo() {
           />
           <StrudelEditor />
         </div>
-        <div className="flex flex-col gap-3 md:flex-row">
-          <div className="h-64 md:h-full md:w-80">
-            <ConsoleLogView logs={consoleLogs} />
+        {showConsoleView && (
+          <div className="flex flex-col gap-3 md:flex-row">
+            <div className="h-64 md:h-full md:w-80">
+              <ConsoleLogView logs={consoleLogs} />
+            </div>
           </div>
-        </div>
+        )}
       </main>
+      <BarGraphPanel isPlaying={isPlaying} />
 
       <ControlPanel
         onPlay={handlePlay}

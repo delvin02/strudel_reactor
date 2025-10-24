@@ -5,12 +5,13 @@ import { Button } from "./ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "./ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
-import { Save, FolderOpen, Trash2, Settings } from "lucide-react";
+import { Save, FolderOpen, Trash2, Settings, Terminal } from "lucide-react";
 import { useState } from "react";
 import { usePresets } from "../hooks/usePresets";
 
@@ -20,6 +21,8 @@ export function Header({
   onModeChange,
   onPresetLoad,
   getCurrentState,
+  showConsoleView,
+  setConsoleView,
 }) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const {
@@ -37,7 +40,7 @@ export function Header({
         <h2 className="text-3xl font-bold">Strudel Demo</h2>
         <Badge
           variant={isPlaying ? "default" : "outline"}
-          className={isPlaying ? "animate-pulse" : ""}
+          className={`font-sans uppercase ${isPlaying ? "animate-pulse" : ""}`}
         >
           {isPlaying ? "Playing" : "Idle"}
         </Badge>
@@ -65,7 +68,7 @@ export function Header({
         {/* Preset Dialog */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-2">
+            <Button variant="outline" size="sm">
               <Settings className="h-4 w-4" />
               Presets
             </Button>
@@ -73,6 +76,9 @@ export function Header({
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>Presets</DialogTitle>
+              <DialogDescription>
+                Save & load your custom strudel
+              </DialogDescription>
             </DialogHeader>
             <Tabs defaultValue="save" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
@@ -153,6 +159,15 @@ export function Header({
             </Tabs>
           </DialogContent>
         </Dialog>
+        <Button
+          variant={showConsoleView ? "destructive" : "outline"}
+          size="sm"
+          onClick={() => setConsoleView(!showConsoleView)}
+        >
+          <Terminal className="h-4 w-4" />
+          {showConsoleView ? "Hide " : "Show "}
+          Console
+        </Button>
       </div>
     </header>
   );

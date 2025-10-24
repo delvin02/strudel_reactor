@@ -9,6 +9,7 @@ import {
   registerSynthSounds,
 } from "@strudel/webaudio";
 import { registerSoundfonts } from "@strudel/soundfonts";
+import console_monkey_patch from "../console-monkey-patch";
 
 export function useStrudel() {
   const [editor, setEditor] = useState(null);
@@ -20,6 +21,7 @@ export function useStrudel() {
     if (!hasRun.current) {
       hasRun.current = true;
       (async () => {
+        console_monkey_patch();
         const strudelEditor = new StrudelMirror({
           defaultOutput: webaudioOutput,
           getTime: () => getAudioContext().currentTime,
@@ -68,26 +70,33 @@ export function useStrudel() {
     }
   }, [editor]);
 
-  const setCode = useCallback((code) => {
-    if (editor) editor.setCode(code);
-  }, [editor]);
+  const setCode = useCallback(
+    (code) => {
+      if (editor) editor.setCode(code);
+    },
+    [editor],
+  );
 
-  const restartPlayback = useCallback((wasPlaying = false) => {
-    if (editor) {
-      try {
-        // stop current playback if it was playing
-        if (wasPlaying) {
-          editor.stop();
+  const restartPlayback = useCallback(
+    (wasPlaying = false) => {
+      if (editor) {
+        try {
+          // stop current playback if it was playing
+          if (wasPlaying) {
+            editor.stop();
+          }
+          // start new playback
+          editor.evaluate();
+          setIsPlaying(true);
+        } catch (error) {
+          console.error("Error restarting Strudel code:", error);
+          setIsPlaying(false);
         }
-        // start new playback
-        editor.evaluate();
-        setIsPlaying(true);
-      } catch (error) {
-        console.error("Error restarting Strudel code:", error);
-        setIsPlaying(false);
       }
-    }
-  }, [editor]);
+    },
+    [editor],
+  );
+
 
   return {
     editor,
