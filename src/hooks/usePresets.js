@@ -1,48 +1,53 @@
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
 
-// "Amensister"
-// @license CC BY-NC-SA 4.0 https://creativecommons.org/licenses/by-nc-sa/4.0/
-// @by Felix Roos
+// "The Rhythm Of The Night" - Work In Progress
+// song @by Corona
+// script @by eeefano
 const DEFAULT_PRESET = {
   pattern: 2,
   bass: 3,
-  text: `const pattern = 2;
-const bass = 3;
+  text: `// "The Rhythm Of The Night" - Work In Progress
+  // song @by Corona
+  // script @by eeefano
+  setDefaultVoicings('legacy')
+  const as = register('as', (mapping, pat) => { mapping = Array.isArray(mapping) ? mapping : [mapping];
+    return pat.fmap((v) => { v = Array.isArray(v) ? v : [v, 0];
+      return Object.fromEntries(mapping.map((prop, i) => [prop, v[i]])); }); });
 
-samples('github:tidalcycles/dirt-samples')
+  const crdpart = "<~ 0@10 1@24 0@19>".pickRestart(
+  ["Ab Cm Bb F@2".slow(5)
+  ,"Bb@3 Ab@3 Cm@2".slow(8)
+  ]);
+  stack
+  ("<0 1@4 0 1@4 ~@8 2 3@7 2 3@7 0 1@4 0 1@4 0 1@4 0 1@4>".pickRestart(
+    ["~ [4@3 ~]!3 7:5 6 4 3"
+    ,"2:-1 0:-2 ~@4 6:1 4:-1 6 4:2 ~@4 [4:2 3]@3 ~@6 4 7:5 6 [4@2 ~] [3:-1 2@3]@2 0 ~@2".slow(4)
+    ,"~@6 [6 ~]!2"
+    ,"6 5@0.5 [5 ~] [4 ~]!2 [3 ~] 3:2@1.5 ~@7 6@2 6:2 [5 ~ ]!2 4 3@2 4 2 0:-2 ~@7 [0 2]@3 3@2 4 6:4 4:-4 ~ 0 2 0 4 ~ 0 0:2@2 ~@7".slow(7)
+  ]).as("n:penv").scale("c4:minor").patt("0.07").s("gm_lead_1_square").room(0.4).delay(0.3).dfb(0.35).dt(60/128).gain(0.85)
 
-stack(
-  // amen
-  n("0 1 2 3 4 5 6 7")
-  .sometimes(x=>x.ply(2))
-  .rarely(x=>x.speed("2 | -2"))
-  .sometimesBy(.4, x=>x.delay(".5"))
-  .s("amencutup")
-  .slow(2)
-  .room(.5)
-  ,
-  // bass
-  sine.add(saw.slow(4)).range(0,7).segment(8)
-  .superimpose(x=>x.add(.1))
-  .scale('G0 minor').note()
-  .s("sawtooth")
-  .gain(.4).decay(.1).sustain(0)
-  .lpa(.1).lpenv(-4).lpq(10)
-  .cutoff(perlin.range(300,3000).slow(8))
-  .degradeBy("0 0.1 .5 .1")
-  .rarely(add(note("12")))
-  ,
-  // chord
-  note("Bb3,D4".superimpose(x=>x.add(.2)))
-  .s('sawtooth').lpf(1000).struct("<~@3 [~ x]>")
-  .decay(.05).sustain(.0).delay(.8).delaytime(.125).room(.8)
-  ,
-  // alien
-  s("breath").room(1).shape(.6).chop(16).rev().mask("<x ~@7>")
-  ,
-  n("0 1").s("east").delay(.5).degradeBy(.8).speed(rand.range(.5,1.5))
-).reset("<x@7 x(5,8,-1)>")`,
+  ,crdpart.chord().anchor("F4").voicing().s("gm_synth_strings_1").color("blue").gain(0.4)
+
+  ,"<~@11 1@23 ~ 0@19>".pickRestart(
+    ["2 ~@2 2 ~@2 2 ~@3 2 ~@3 2 ~"
+    ,"[2 ~@2 2 ~@2 2 ~]!2"
+  ]).n().chord(crdpart).anchor(crdpart.rootNotes(2)).voicing().s("gm_synth_bass_1").lpf(1500).room(0.5).color("green").gain(0.9)
+
+  ,"<~@11 1@8 ~@16 0@19>".pickRestart(
+    ["<5 7 6 3!2> ~ 9 ~ 10 ~ ~ 12 ~ 11 ~ 10 ~ 11 9 ~"
+    ,"<6!3 5!3 7!2> ~ 9 ~ 10 ~ ~ 12 ~ 11 ~ 10 ~ 11 9 ~"
+  ]).scale("c3:minor").note().s("gm_lead_2_sawtooth").room(0.3).delay(0.3).dfb(0.5).dt(60/128*2).color("red").gain(0.6)
+
+  ,"<[2,3] ~@10 0@6 [0,1]@2 [0,2] 0@5 [0,1]@2 [0,2] 0@6 [2,3] 0@8 [0,1]@2 [0,2] 0@8>".pickRestart(
+   [stack(s("bd*4").gain(0.8),s("[~ oh]*4").gain(0.14),s("hh*16").gain(0.09),s("[~ cp]*2").gain(0.4))
+   ,s("[~ sd!3]!4 [sd*4]!4").slow(2).gain(run(32).slow(2).mul(1/31).add(0.1).mul(0.4))
+   ,s("cr").gain(0.2)
+   ,s("bd").gain(0.8)
+   ]).bank("RolandTR909").room(0.2).color("yellow").velocity(1).log()
+
+  ).cpm(128/4).log()
+  // @version 1.2`,
   timestamp: 0,
 };
 
@@ -50,17 +55,17 @@ export function usePresets() {
   const [presets, setPresets] = useState(() => {
     const saved = localStorage.getItem("strudel-presets");
     const parsedPresets = saved ? JSON.parse(saved) : {};
-    
+
     // Add default preset if it doesn't exist
-    if (!parsedPresets["Amensister"]) {
+    if (!parsedPresets["The Rhythm Of The Night"]) {
       const updatedPresets = {
         ...parsedPresets,
-        "Amensister": DEFAULT_PRESET,
+        TheRhythmOfTheNight: DEFAULT_PRESET,
       };
       localStorage.setItem("strudel-presets", JSON.stringify(updatedPresets));
       return updatedPresets;
     }
-    
+
     return parsedPresets;
   });
   const [presetName, setPresetName] = useState("");
