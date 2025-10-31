@@ -1,4 +1,4 @@
-export const stranger_tune = `setcps(140/60/4)
+export const stranger_tune = `setcps({CPM})
 
 samples('github:algorave-dave/samples')
 samples('https://raw.githubusercontent.com/tidalcycles/Dirt-Samples/master/strudel.json')
@@ -37,10 +37,9 @@ const arpeggiator2 = [
 
 
 const pattern = 0
-const bass = 0
 
 bassline:
-note(pick(basslines, bass))
+note(pick(basslines, 0))
 .sound("supersaw")
 .postgain(2)
 .room(0.6)
@@ -92,6 +91,6 @@ stack(
 )
 //Remixed and reproduced from Algorave Dave's code found here: https://www.youtube.com/watch?v=ZCcpWzhekEY
 // all(x => x.gain(mouseX.range(0,1)))
-all(x => x.log())
+all(x => x.gain({VOLUME}).log())
 
 // @version 1.2`;

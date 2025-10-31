@@ -7,10 +7,10 @@ export function ControlPanel({
   onPlay,
   onStop,
   isPlaying,
-  pattern,
-  bass,
-  onPatternChange,
-  onBassChange,
+  cpm,
+  volume,
+  onCpmChange,
+  onVolumeChange,
   showBarGraph,
   setShowBarGraph,
 }) {
@@ -28,32 +28,31 @@ export function ControlPanel({
             Bar Graph
           </Button>
         </div>
-        {/* Pattern and Bass Controls */}
+        {/* CPM and Volume Controls */}
         <div className="flex items-center justify-center gap-6">
           <div className="flex flex-col gap-2 min-w-32">
             <Label className="text-sm font-medium text-center">
-              Pattern: {pattern}
+              CPM
             </Label>
-            <Slider
-              value={[pattern]}
-              onValueChange={(value) => onPatternChange(value[0])}
-              max={2}
-              min={0}
-              step={1}
-              className="w-full"
+            <input
+              type="text"
+              value={cpm}
+              onChange={(e) => onCpmChange(e.target.value)}
+              className="w-full px-2 py-1 text-sm rounded border border-border bg-background text-foreground text-center"
+              placeholder="140/60/4"
             />
           </div>
 
           <div className="flex flex-col gap-2 min-w-32">
             <Label className="text-sm font-medium text-center">
-              Bass: {bass}
+              Volume: {volume.toFixed(2)}
             </Label>
             <Slider
-              value={[bass]}
-              onValueChange={(value) => onBassChange(value[0])}
+              value={[volume]}
+              onValueChange={(value) => onVolumeChange(value[0])}
               max={1}
               min={0}
-              step={1}
+              step={0.01}
               className="w-full"
             />
           </div>

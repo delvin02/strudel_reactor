@@ -5,14 +5,16 @@ export function useTextProcessor() {
   const [isHushMode, setIsHushMode] = useState(false);
 
   const processText = useCallback(
-    (inputText, pattern = 0, bass = 0) => {
+    (inputText, cpm = "142/4", volume = 1) => {
       let processedText = inputText.replaceAll("<p1_Radio>", () => {
         return isHushMode ? "_" : "";
       });
       
-      // replace pattern and bass values
-      processedText = processedText.replace(/const pattern = \d+/g, `const pattern = ${pattern}`);
-      processedText = processedText.replace(/const bass = \d+/g, `const bass = ${bass}`);
+      // replace CPM delimiter with actual value
+      processedText = processedText.replace(/\{CPM\}/g, cpm);
+      
+      // replace volume delimiter with actual value
+      processedText = processedText.replace(/\{VOLUME\}/g, volume.toString());
       
       return processedText;
     },

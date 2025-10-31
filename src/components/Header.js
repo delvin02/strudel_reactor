@@ -138,7 +138,7 @@ export function Header({
                             <div>
                               <div className="font-medium">{name}</div>
                               <div className="text-xs text-muted-foreground">
-                                Pattern: {preset.pattern} | Bass: {preset.bass}
+                                CPM: {preset.cpm || preset.pattern || "N/A"} | Volume: {(preset.volume || 1).toFixed(2)}
                               </div>
                             </div>
                           </Button>

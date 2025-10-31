@@ -23,8 +23,8 @@ export default function StrudelDemo() {
     handleHushModeChange,
   } = useTextProcessor();
 
-  const [pattern, setPattern] = useState(0);
-  const [bass, setBass] = useState(0);
+  const [cpm, setCpm] = useState("140/60/4");
+  const [volume, setVolume] = useState(1);
   const [showConsoleView, setConsoleView] = useState(true);
   const [showBarGraph, setShowBarGraph] = useState(true);
   const [consoleLogs, setConsoleLogs] = useState([]);
@@ -39,7 +39,7 @@ export default function StrudelDemo() {
 
   useEffect(() => {
     if (isInitialized && text) {
-      const processedText = processText(text, pattern, bass);
+      const processedText = processText(text, cpm, volume);
       setCode(processedText);
 
       // If strudel is currently playing, restart it with the new values
@@ -55,15 +55,15 @@ export default function StrudelDemo() {
     isHushMode,
     processText,
     setCode,
-    pattern,
-    bass,
+    cpm,
+    volume,
     restartPlayback,
     isPlaying,
   ]);
 
   const handlePlay = async () => {
     // pre-process first
-    const processedText = processText(text, pattern, bass);
+    const processedText = processText(text, cpm, volume);
     // set the processed code
     setCode(processedText);
 
@@ -74,7 +74,7 @@ export default function StrudelDemo() {
   const handleModeChange = (hushMode) => {
     const wasPlaying = isPlaying;
     handleHushModeChange(hushMode);
-    const processedText = processText(text, pattern, bass);
+    const processedText = processText(text, cpm, volume);
     setCode(processedText);
 
     // if it was playing, restart playback with new code
@@ -86,14 +86,31 @@ export default function StrudelDemo() {
   };
 
   const handlePresetLoad = (preset) => {
-    setPattern(preset.pattern);
-    setBass(preset.bass);
+    const newCpm = preset.cpm !== undefined ? preset.cpm : cpm;
+    const newVolume = preset.volume !== undefined ? preset.volume : volume;
+    
+    // update state
+    if (preset.cpm !== undefined) setCpm(preset.cpm);
+    if (preset.volume !== undefined) setVolume(preset.volume);
+    
+    // update text
     handleTextChange(preset.text);
+    
+    // process text immediately with the preset's CPM and volume
+    const processedText = processText(preset.text, newCpm, newVolume);
+    setCode(processedText);
+    
+    // If playing, restart with new code
+    if (isPlaying) {
+      setTimeout(() => {
+        restartPlayback(true);
+      }, 100);
+    }
   };
 
   const getCurrentState = () => ({
-    pattern,
-    bass,
+    cpm,
+    volume,
     text,
   });
 
@@ -189,10 +206,10 @@ export default function StrudelDemo() {
           <PreprocessView
             text={text}
             onTextChange={handleTextChange}
-            pattern={pattern}
-            bass={bass}
-            onPatternChange={setPattern}
-            onBassChange={setBass}
+            cpm={cpm}
+            volume={volume}
+            onCpmChange={setCpm}
+            onVolumeChange={setVolume}
           />
           <StrudelEditor />
         </div>
@@ -210,10 +227,10 @@ export default function StrudelDemo() {
         onPlay={handlePlay}
         onStop={stop}
         isPlaying={isPlaying}
-        pattern={pattern}
-        bass={bass}
-        onPatternChange={setPattern}
-        onBassChange={setBass}
+        cpm={cpm}
+        volume={volume}
+        onCpmChange={setCpm}
+        onVolumeChange={setVolume}
         showBarGraph={showBarGraph}
         setShowBarGraph={setShowBarGraph}
       />

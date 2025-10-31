@@ -5,8 +5,8 @@ import { toast } from "sonner";
 // song @by Corona
 // script @by eeefano
 const DEFAULT_PRESET = {
-  pattern: 2,
-  bass: 3,
+cpm: "128/4",
+  volume: 1.0,
   text: `// "The Rhythm Of The Night" - Work In Progress
   // song @by Corona
   // script @by eeefano
@@ -46,8 +46,26 @@ const DEFAULT_PRESET = {
    ,s("bd").gain(0.8)
    ]).bank("RolandTR909").room(0.2).color("yellow").velocity(1).log()
 
-  ).cpm(128/4).log()
+  ).cpm({CPM}).gain({VOLUME}).log()
   // @version 1.2`,
+  timestamp: 0,
+};
+
+const DELVIN_PRESET = {
+  cpm: "142/4",
+  volume: 0.7,
+  text: `setcpm({CPM})
+
+var euroDrums = stack(s("rolandtr909_bd").struct("[x - - -][x - - -][x - - -][x - x -]"),
+                      s("rolandtr909_oh").struct("[- - x -][- - x -][- - x -][- - x -]"),
+                      s("rolandtr909_hh").struct("[x x - -][x x - -][x x - -][x x - -]"))
+
+var chordProgression = stack(n("[0 1 2 3][2 3 1 0]").legato(\`.75 .3 .25 1\`).room(0.4).chord(\`<C G Am F>\`).s("gm_accordion").voicing(),
+                             chord(\`<C G Am F>\`).s("gm_pad_metallic").room(2).voicing().gain(0.15)).log()
+
+$: arrange([1*4, stack(euroDrums.gain(0.6), chordProgression)]).log()
+
+all(x => x.gain({VOLUME}))`,
   timestamp: 0,
 };
 
@@ -56,17 +74,23 @@ export function usePresets() {
     const saved = localStorage.getItem("strudel-presets");
     const parsedPresets = saved ? JSON.parse(saved) : {};
 
+    const updatedPresets = { ...parsedPresets };
+
     // Add default preset if it doesn't exist
     if (!parsedPresets["The Rhythm Of The Night"]) {
-      const updatedPresets = {
-        ...parsedPresets,
-        TheRhythmOfTheNight: DEFAULT_PRESET,
-      };
-      localStorage.setItem("strudel-presets", JSON.stringify(updatedPresets));
-      return updatedPresets;
+      updatedPresets.TheRhythmOfTheNight = DEFAULT_PRESET;
     }
 
-    return parsedPresets;
+    // Add Delvin preset if it doesn't exist
+    if (!parsedPresets["Delvin"]) {
+      updatedPresets.Delvin = DELVIN_PRESET;
+    }
+
+    if (Object.keys(updatedPresets).length > Object.keys(parsedPresets).length) {
+      localStorage.setItem("strudel-presets", JSON.stringify(updatedPresets));
+    }
+
+    return updatedPresets;
   });
   const [presetName, setPresetName] = useState("");
   const [showPresetInput, setShowPresetInput] = useState(false);
@@ -75,10 +99,10 @@ export function usePresets() {
     (getCurrentState) => {
       if (!presetName.trim()) return;
 
-      const { pattern, bass, text } = getCurrentState();
+      const { cpm, volume, text } = getCurrentState();
       const newPreset = {
-        pattern,
-        bass,
+        cpm,
+        volume,
         text,
         timestamp: Date.now(),
       };
