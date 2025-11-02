@@ -206,8 +206,6 @@ export default function StrudelDemo() {
           <PreprocessView
             text={text}
             onTextChange={handleTextChange}
-            cpm={cpm}
-            volume={volume}
             onCpmChange={setCpm}
             onVolumeChange={setVolume}
           />
