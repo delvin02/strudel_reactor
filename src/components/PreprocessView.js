@@ -11,37 +11,52 @@ import {
 import { Button } from "./ui/button";
 import { HelpCircle } from "lucide-react";
 
-export function PreprocessView({ text, onTextChange, onCpmChange, onVolumeChange }) {
+export function PreprocessView({
+  text,
+  onTextChange,
+  onCpmChange,
+  onVolumeChange,
+}) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  
-  // check if object matches preset format type from usePresets.js 
+
+  // check if object matches preset format type from usePresets.js
   // mainly: cpm, volume, text, timestamp (at least text, cpm, or volume)
   const isPresetFormat = (obj) => {
-    if (!obj || typeof obj !== 'object' || Array.isArray(obj)) {
+    if (!obj || typeof obj !== "object" || Array.isArray(obj)) {
       return false;
     }
     // object has: cpm, volume, text, timestamp (at least text, cpm, or volume)
-    return obj.hasOwnProperty('text') || obj.hasOwnProperty('cpm') || obj.hasOwnProperty('volume');
+    return (
+      obj.hasOwnProperty("text") ||
+      obj.hasOwnProperty("cpm") ||
+      obj.hasOwnProperty("volume")
+    );
   };
 
-  // convert preset json to Strudel code 
+  // convert preset json to Strudel code
   const convertPresetToCode = (jsonData) => {
     // Check if it's a collection of presets (object with preset names as keys)
     const keys = Object.keys(jsonData);
-    if (keys.length > 0 && jsonData[keys[0]] && isPresetFormat(jsonData[keys[0]])) {
+    if (
+      keys.length > 0 &&
+      jsonData[keys[0]] &&
+      isPresetFormat(jsonData[keys[0]])
+    ) {
       // collection of presets - extract all text fields
       return keys
         .map((presetName) => {
           const preset = jsonData[presetName];
           if (preset && preset.text) {
-            const cpmInfo = preset.cpm ? ` (CPM: ${preset.cpm})` : '';
-            const volumeInfo = preset.volume ? ` (Volume: ${preset.volume})` : '';
+            const cpmInfo = preset.cpm ? ` (CPM: ${preset.cpm})` : "";
+            const volumeInfo = preset.volume
+              ? ` (Volume: ${preset.volume})`
+              : "";
             return `// Preset: ${presetName}${cpmInfo}${volumeInfo}\n${preset.text}`;
           }
           return null;
         })
         .filter(Boolean)
-        .join('\n\n');
+        .join("\n\n");
     }
 
     // single preset object
@@ -49,7 +64,11 @@ export function PreprocessView({ text, onTextChange, onCpmChange, onVolumeChange
       if (jsonData.text) {
         // edge case: if CPM is set but not in text, add it
         let result = jsonData.text;
-        if (jsonData.cpm && !result.includes('setcpm') && !result.includes('setcps')) {
+        if (
+          jsonData.cpm &&
+          !result.includes("setcpm") &&
+          !result.includes("setcps")
+        ) {
           result = `setcpm(${jsonData.cpm})\n\n${result}`;
         }
         return result;
@@ -61,15 +80,15 @@ export function PreprocessView({ text, onTextChange, onCpmChange, onVolumeChange
   };
 
   const handlePaste = (e) => {
-    const pastedText = e.clipboardData.getData('text');
-    
+    const pastedText = e.clipboardData.getData("text");
+
     // if string, just return - let the set code handle it
     const trimmed = pastedText.trim();
-    if (!trimmed.startsWith('{') && !trimmed.startsWith('[')) {
+    if (!trimmed.startsWith("{") && !trimmed.startsWith("[")) {
       return;
     }
 
-    // try parse as JSON 
+    // try parse as JSON
     try {
       const jsonData = JSON.parse(pastedText);
       const converted = convertPresetToCode(jsonData);
@@ -84,10 +103,13 @@ export function PreprocessView({ text, onTextChange, onCpmChange, onVolumeChange
 
         // extract CPM and volume from presets
         const keys = Object.keys(jsonData);
-        
+
         // check if it's a collection of presets or a single preset
-        if (keys.length > 0 && jsonData[keys[0]] && isPresetFormat(jsonData[keys[0]])) {
-          
+        if (
+          keys.length > 0 &&
+          jsonData[keys[0]] &&
+          isPresetFormat(jsonData[keys[0]])
+        ) {
           const firstPreset = jsonData[keys[0]];
           if (firstPreset.cpm !== undefined && onCpmChange) {
             onCpmChange(firstPreset.cpm);
@@ -106,12 +128,14 @@ export function PreprocessView({ text, onTextChange, onCpmChange, onVolumeChange
         }
 
         // insert converted code at cursor position
-        const newText = text.substring(0, start) + converted + text.substring(end);
+        const newText =
+          text.substring(0, start) + converted + text.substring(end);
         onTextChange(newText);
 
         // focus after inserted text
         setTimeout(() => {
-          textarea.selectionStart = textarea.selectionEnd = start + converted.length;
+          textarea.selectionStart = textarea.selectionEnd =
+            start + converted.length;
           textarea.focus();
         }, 0);
       }
@@ -130,12 +154,15 @@ export function PreprocessView({ text, onTextChange, onCpmChange, onVolumeChange
       const foundCpm = cpmMatch[1];
       // If it's not the delimiter, restore it
       if (foundCpm !== "{CPM}") {
-        const updatedText = newText.replace(/setcpm\([^)]+\)/g, `setcpm({CPM})`);
+        const updatedText = newText.replace(
+          /setcpm\([^)]+\)/g,
+          `setcpm({CPM})`,
+        );
         onTextChange(updatedText);
         return;
       }
     }
-    
+
     // Update the text normally (preserving delimiters)
     onTextChange(newText);
   };
@@ -162,7 +189,9 @@ export function PreprocessView({ text, onTextChange, onCpmChange, onVolumeChange
               <div>
                 <h3 className="font-semibold mb-2">What is a Preset?</h3>
                 <p className="text-sm text-muted-foreground">
-                  A preset is a JSON object containing your Strudel code with settings like CPM (cycles per minute), volume, and the code text.
+                  A preset is a JSON object containing your Strudel code with
+                  settings like CPM (cycles per minute), volume, and the code
+                  text.
                 </p>
               </div>
 
@@ -172,7 +201,7 @@ export function PreprocessView({ text, onTextChange, onCpmChange, onVolumeChange
                   A preset should match this format:
                 </p>
                 <pre className="bg-muted p-3 rounded text-xs overflow-x-auto">
-{`{
+                  {`{
   "cpm": "142/4",
   "volume": 0.7,
   "text": "s(\\"bd hh sd hh\\")\\n  .gain({VOLUME})\\n  .log()",
@@ -182,11 +211,17 @@ export function PreprocessView({ text, onTextChange, onCpmChange, onVolumeChange
               </div>
 
               <div>
-                <h3 className="font-semibold mb-2">Step-by-Step Instructions</h3>
+                <h3 className="font-semibold mb-2">
+                  Step-by-Step Instructions
+                </h3>
                 <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
                   <li>
-                    <strong>Convert JavaScript Objects to JSON:</strong> If you have a JavaScript object with single quotes or other syntax,{" "}
-                    <strong className="text-foreground">you must convert it to valid JSON first</strong> using the{" "}
+                    <strong>Convert JavaScript Objects to JSON:</strong> If you
+                    have a JavaScript object with single quotes or other syntax,{" "}
+                    <strong className="text-foreground">
+                      you must convert it to valid JSON first
+                    </strong>{" "}
+                    using the{" "}
                     <a
                       href="https://www.convertsimple.com/convert-javascript-to-json/"
                       target="_blank"
@@ -194,16 +229,21 @@ export function PreprocessView({ text, onTextChange, onCpmChange, onVolumeChange
                       className="text-primary hover:underline font-medium"
                     >
                       ConvertSimple JavaScript to JSON Converter
-                    </a>.
+                    </a>
+                    .
                   </li>
                   <li>
-                    <strong>Copy your preset JSON</strong> (or collection of presets) - must be valid JSON format
+                    <strong>Copy your preset JSON</strong> (or collection of
+                    presets) - must be valid JSON format
                   </li>
                   <li>
-                    <strong>Paste it into this text area</strong> - The converter will automatically extract the code and insert it into the editor
+                    <strong>Paste it into this text area</strong> - The
+                    converter will automatically extract the code and insert it
+                    into the editor
                   </li>
                   <li>
-                    <strong>Plain strings paste normally</strong> - If you paste regular Strudel code (not JSON), it will paste as-is
+                    <strong>Plain strings paste normally</strong> - If you paste
+                    regular Strudel code (not JSON), it will paste as-is
                   </li>
                 </ol>
               </div>
@@ -211,7 +251,7 @@ export function PreprocessView({ text, onTextChange, onCpmChange, onVolumeChange
               <div>
                 <h3 className="font-semibold mb-2">Example Preset JSON</h3>
                 <pre className="bg-muted p-3 rounded text-xs overflow-x-auto">
-{`{
+                  {`{
   "cpm": "142/4",
   "volume": 0.7,
   "text": "setcpm({CPM})\\n\\ns(\\"bd hh sd hh\\")\\n  .gain({VOLUME})\\n  .log()",
@@ -222,7 +262,9 @@ export function PreprocessView({ text, onTextChange, onCpmChange, onVolumeChange
 
               <div className="bg-blue-50 dark:bg-blue-950 p-3 rounded">
                 <p className="text-sm">
-                  <strong>Important:</strong> Only valid JSON format will be accepted. If you have JavaScript objects with single quotes, missing commas, or other syntax issues,{" "}
+                  <strong>Important:</strong> Only valid JSON format will be
+                  accepted. If you have JavaScript objects with single quotes,
+                  missing commas, or other syntax issues,{" "}
                   <strong>you must convert them first</strong> using the{" "}
                   <a
                     href="https://www.convertsimple.com/convert-javascript-to-json/"
