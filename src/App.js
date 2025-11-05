@@ -88,18 +88,18 @@ export default function StrudelDemo() {
   const handlePresetLoad = (preset) => {
     const newCpm = preset.cpm !== undefined ? preset.cpm : cpm;
     const newVolume = preset.volume !== undefined ? preset.volume : volume;
-    
+
     // update state
     if (preset.cpm !== undefined) setCpm(preset.cpm);
     if (preset.volume !== undefined) setVolume(preset.volume);
-    
+
     // update text
     handleTextChange(preset.text);
-    
+
     // process text immediately with the preset's CPM and volume
     const processedText = processText(preset.text, newCpm, newVolume);
     setCode(processedText);
-    
+
     // If playing, restart with new code
     if (isPlaying) {
       setTimeout(() => {
@@ -114,9 +114,8 @@ export default function StrudelDemo() {
     text,
   });
 
-  // Advanced throttled version that batches console logs
+  // batch console logs
   const addConsoleLogThrottled = (message, type = "log") => {
-    // Add to batch
     logBatchRef.current.push({
       id: Date.now() + Math.random(),
       message,
@@ -124,21 +123,23 @@ export default function StrudelDemo() {
       timestamp: Date.now(),
     });
 
-    // Clear existing timeout
+    // clear existing timeout
     if (throttleRef.current) {
       clearTimeout(throttleRef.current);
     }
 
-    // Set new timeout to process batch
+    // set new timeout to process batch
+    // reduced throttle to 100ms for better responsiveness
     throttleRef.current = setTimeout(() => {
       if (logBatchRef.current.length > 0) {
         setConsoleLogs((prev) => {
           const updated = [...prev, ...logBatchRef.current];
           return updated.length > MAX_LOGS ? updated.slice(-MAX_LOGS) : updated;
         });
-        logBatchRef.current = []; // Clear batch
+        // clear batch
+        logBatchRef.current = [];
       }
-    }, 100); // Reduced throttle to 100ms for better responsiveness
+    }, 100);
   };
 
   // capture console logs
@@ -148,29 +149,29 @@ export default function StrudelDemo() {
     const originalWarn = console.warn;
     const originalInfo = console.info;
 
+    // only capture logs when playing
     console.log = (...args) => {
       originalLog(...args);
-      // Only capture logs when playing
       if (isPlaying) {
         addConsoleLogThrottled(args.join(" "), "log");
       }
     };
 
+    // always capture errors
     console.error = (...args) => {
       originalError(...args);
-      // Always capture errors
       addConsoleLogThrottled(args.join(" "), "error");
     };
 
+    // always capture warnings
     console.warn = (...args) => {
       originalWarn(...args);
-      // Always capture warnings
       addConsoleLogThrottled(args.join(" "), "warn");
     };
 
     console.info = (...args) => {
       originalInfo(...args);
-      // Only capture info when playing
+      // only capture info when playing
       if (isPlaying) {
         addConsoleLogThrottled(args.join(" "), "info");
       }
@@ -182,7 +183,7 @@ export default function StrudelDemo() {
       console.warn = originalWarn;
       console.info = originalInfo;
 
-      // Cleanup throttle timeout and batch
+      // cleanup throttle
       if (throttleRef.current) {
         clearTimeout(throttleRef.current);
       }

@@ -7,10 +7,12 @@ import {
   interpolatePlasma,
 } from "d3-scale-chromatic";
 
+// utility function to merge clsx and tailwind-merge (shadcn)
 export function cn(...inputs) {
   return twMerge(clsx(inputs));
 }
 
+// utility function to get a color scale based on the scheme
 export const getColorScale = (scheme) => {
   switch (scheme) {
     case "rainbow":

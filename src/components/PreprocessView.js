@@ -35,7 +35,7 @@ export function PreprocessView({
 
   // convert preset json to Strudel code
   const convertPresetToCode = (jsonData) => {
-    // Check if it's a collection of presets (object with preset names as keys)
+    // check if it's object with preset names as keys
     const keys = Object.keys(jsonData);
     if (
       keys.length > 0 &&

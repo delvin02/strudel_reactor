@@ -6,10 +6,10 @@ import { getColorScale } from "../lib/utils";
 export default function BarGraphPanel({ isPlaying }) {
   const svgRef = useRef(null);
 
-  // For the requestAnimationFrame loop
+  // reference for the requestAnimationFrame loop
   const animationRef = useRef(null);
 
-  // Holds the current data piped
+  // reference for the current data piped
   const dataRef = useRef([]);
   const dimensionsRef = useRef({ width: 800, height: 320 });
   const yScaleRef = useRef(null);
@@ -18,12 +18,12 @@ export default function BarGraphPanel({ isPlaying }) {
   const [colorScheme, setColorScheme] = useState("rainbow");
   const [animationSpeed, setAnimationSpeed] = useState(1);
 
-  // Update the color scale ref whenever the state changes
+  // update the color scale ref whenever the state changes
   useEffect(() => {
     colorScaleRef.current = getColorScale(colorScheme);
   }, [colorScheme]);
 
-  // Data parsing function
+  // data parsing function
   const parseConsoleData = useCallback((dataArray) => {
     if (!dataArray || dataArray.length === 0) return [];
 
@@ -69,25 +69,22 @@ export default function BarGraphPanel({ isPlaying }) {
         ),
       );
 
-      // Use `key` for the data join, `i` for array position
       return { key: index, i: index, compositeValue };
     });
   }, []);
 
-  // Effect for Subscribing to data
   useEffect(() => {
-    console.log("here");
     if (!isPlaying) {
-      dataRef.current = []; // Clear data when stopped
+      dataRef.current = [];
       return;
     }
 
-    // This handler only updates the data ref, it doesn't trigger renders
+    // this handler only updates the data ref, it doesn't trigger renders
     const handleD3Data = (event) => {
       dataRef.current = parseConsoleData(event.detail);
     };
 
-    // Get initial data on play
+    // get initial data on play
     const initialData = getD3Data();
     console.log("getting data", initialData);
     if (initialData && initialData.length > 0) {
@@ -100,14 +97,14 @@ export default function BarGraphPanel({ isPlaying }) {
     };
   }, [isPlaying, parseConsoleData]);
 
-  // Effect for Resize handling and setting up scales
+  // resize handling and setting up scales
   useEffect(() => {
     const svgElement = svgRef.current;
     if (!svgElement) return;
 
     const svg = d3.select(svgElement);
 
-    // This observer updates dimensions and y-scale on resize
+    // updates dimensions and y-scale on resize
     const observer = new ResizeObserver((entries) => {
       const entry = entries[0];
       if (entry) {
@@ -120,18 +117,16 @@ export default function BarGraphPanel({ isPlaying }) {
       }
     });
 
-    // Observe the parent element for resizing
     observer.observe(svgElement.parentElement);
 
     return () => {
       observer.disconnect();
     };
-  }, []); // Runs once on mount
+  }, []); 
 
-  // Effect for the Animation Loop
   useEffect(() => {
     if (!isPlaying) {
-      // Stop loop and clear SVG if not playing
+      // stop loop and clear SVG if not playing
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
         animationRef.current = null;

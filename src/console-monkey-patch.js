@@ -1,6 +1,7 @@
 let originalLog = null;
 const logArray = [];
 
+// copied from mark boilerplace code
 export default function console_monkey_patch() {
   //If react multicalls this, do nothing
   if (originalLog) return;
@@ -26,14 +27,17 @@ export default function console_monkey_patch() {
   };
 }
 
+// get the d3 data
 export function getD3Data() {
   return [...logArray];
 }
 
+// subscribe to the d3 data
 export function subscribe(eventName, listener) {
   document.addEventListener(eventName, listener);
 }
 
+// unsubscribe from the d3 data
 export function unsubscribe(eventName, listener) {
   document.removeEventListener(eventName, listener);
 }

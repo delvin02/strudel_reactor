@@ -20,6 +20,7 @@ export function useStrudel() {
   useEffect(() => {
     if (!hasRun.current) {
       hasRun.current = true;
+      // mount strudel editor
       (async () => {
         console_monkey_patch();
         const strudelEditor = new StrudelMirror({
@@ -50,6 +51,7 @@ export function useStrudel() {
     }
   }, []);
 
+  // play the strudel code
   const play = useCallback(async () => {
     if (editor) {
       try {
@@ -63,6 +65,7 @@ export function useStrudel() {
     }
   }, [editor]);
 
+  // stop the strudel code
   const stop = useCallback(() => {
     if (editor) {
       editor.stop();

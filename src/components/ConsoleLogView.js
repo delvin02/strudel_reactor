@@ -32,6 +32,7 @@ export function ConsoleLogView({ logs }) {
     }
   }, [logs.length]);
 
+  // when download log is clicked
   const downloadLogs = () => {
     const logText = logs
       .map(
