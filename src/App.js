@@ -202,8 +202,8 @@ export default function StrudelDemo() {
         showConsoleView={showConsoleView}
         setConsoleView={setConsoleView}
       />
-      <main className="flex flex-1 flex-col gap-3 overflow-hidden p-3 md:flex-row md:gap-4 md:p-4">
-        <div className="flex flex-1 flex-col gap-3 md:flex-row">
+      <main className="flex flex-1 flex-col gap-3 overflow-hidden p-3 lg:flex-row lg:gap-4 lg:p-4">
+        <div className="flex flex-1 flex-col gap-3 md:flex-row min-w-0">
           <PreprocessView
             text={text}
             onTextChange={handleTextChange}
@@ -213,8 +213,8 @@ export default function StrudelDemo() {
           <StrudelEditor />
         </div>
         {showConsoleView && (
-          <div className="flex flex-col gap-3 md:flex-row">
-            <div className="h-64 md:h-full md:w-80">
+          <div className="flex flex-col gap-3 lg:flex-row lg:flex-shrink-0">
+            <div className="h-64 md:h-80 lg:h-full lg:w-80">
               <ConsoleLogView logs={consoleLogs} />
             </div>
           </div>

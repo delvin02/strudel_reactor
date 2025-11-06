@@ -84,8 +84,8 @@ export function ConsoleLogView({ logs }) {
   };
 
   return (
-    <Card className="flex flex-col h-full overflow-y-auto">
-      <div className="flex justify-between items-center border-b border-border px-3 py-2 sm:px-4 sm:py-3">
+    <Card className="flex flex-col h-full overflow-hidden">
+      <div className="flex justify-between items-center border-b border-border px-3 py-2 sm:px-4 sm:py-3 flex-shrink-0">
         <h2 className="text-sm font-semibold">Console Log</h2>
         <div className="flex gap-2">
           <Button
@@ -100,7 +100,7 @@ export function ConsoleLogView({ logs }) {
           </Button>
         </div>
       </div>
-      <CardContent className="flex-1 p-0">
+      <CardContent className="flex-1 p-0 overflow-hidden">
         <div ref={scrollAreaRef} className="h-full px-4 pb-4 overflow-y-auto">
           {logs.length === 0 ? (
             <div className="flex items-center justify-center h-32 text-muted-foreground">

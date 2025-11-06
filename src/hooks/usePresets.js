@@ -5,7 +5,7 @@ import { toast } from "sonner";
 // song @by Corona
 // script @by eeefano
 const DEFAULT_PRESET = {
-cpm: "128/4",
+  cpm: "128/4",
   volume: 1.0,
   text: `// "The Rhythm Of The Night" - Work In Progress
   // song @by Corona
@@ -82,11 +82,11 @@ export function usePresets() {
     }
 
     // Add Delvin preset if it doesn't exist
-    if (!parsedPresets["Delvin"]) {
-      updatedPresets.Delvin = DELVIN_PRESET;
-    }
+    updatedPresets.Delvin = DELVIN_PRESET;
 
-    if (Object.keys(updatedPresets).length > Object.keys(parsedPresets).length) {
+    if (
+      Object.keys(updatedPresets).length > Object.keys(parsedPresets).length
+    ) {
       localStorage.setItem("strudel-presets", JSON.stringify(updatedPresets));
     }
 
