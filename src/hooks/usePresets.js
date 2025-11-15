@@ -65,7 +65,7 @@ var chordProgression = stack(n("[0 1 2 3][2 3 1 0]").legato(\`.75 .3 .25 1\`).ro
 
 $: arrange([1*4, stack(euroDrums.gain(0.6), chordProgression)]).log()
 
-all(x => x.gain({VOLUME}))`,
+all(x => x.gain({VOLUME}).log())`,
   timestamp: 0,
 };
 
