@@ -1,5 +1,6 @@
 import "./cors-redirect";
 import { useEffect, useState, useRef } from "react";
+import { toast } from "sonner";
 import { stranger_tune } from "./tunes";
 import { useStrudel } from "./hooks/useStrudel";
 import { useTextProcessor } from "./hooks/useTextProcessor";
@@ -63,13 +64,18 @@ export default function StrudelDemo() {
   ]);
 
   const handlePlay = async () => {
-    // pre-process first
-    const processedText = processText(text, cpm, volume);
-    // set the processed code
-    setCode(processedText);
+    try {
+      // pre-process first
+      const processedText = processText(text, cpm, volume);
+      // set the processed code
+      setCode(processedText);
 
-    // then play
-    await play();
+      // then play
+      await play();
+    } catch (error) {
+      console.error("Error in handlePlay:", error);
+      toast.error(`Playback error: ${error.message || "Unknown error occurred"}`);
+    }
   };
 
   const handleModeChange = (hushMode) => {
@@ -152,6 +158,11 @@ export default function StrudelDemo() {
     console.error = (...args) => {
       originalError(...args);
       addConsoleLogThrottled(args.join(" "), "error");
+      // Show toast error when playing
+      if (isPlaying) {
+        const errorMessage = args.join(" ");
+        toast.error(`Console error: ${errorMessage}`);
+      }
     };
 
     // always capture warnings

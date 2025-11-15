@@ -15,6 +15,7 @@ const Toaster = ({ ...props }) => {
     <Sonner
       theme={theme}
       className="toaster group"
+      richColors
       icons={{
         success: <CircleCheck className="h-4 w-4" />,
         info: <Info className="h-4 w-4" />,
@@ -25,7 +26,11 @@ const Toaster = ({ ...props }) => {
       toastOptions={{
         classNames: {
           toast:
-            "group toast group-[.toaster]:bg-green-600 group-[.toaster]:text-primary-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg",
+            "group toast group-[.toaster]:text-primary-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg",
+          success: "group-[.toaster]:bg-green-600",
+          error: "group-[.toaster]:bg-red-600",
+          warning: "group-[.toaster]:bg-yellow-600",
+          info: "group-[.toaster]:bg-blue-600",
           description: "group-[.toast]:text-muted-foreground",
           actionButton:
             "group-[.toast]:bg-primary group-[.toast]:text-primary-foreground",
