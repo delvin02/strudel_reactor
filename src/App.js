@@ -33,6 +33,7 @@ export default function StrudelDemo() {
 
   useEffect(() => {
     if (isInitialized && !text) {
+      console.log("setting text to stranger_tune");
       handleTextChange(stranger_tune);
     }
   }, [isInitialized, text, handleTextChange]);
@@ -72,17 +73,7 @@ export default function StrudelDemo() {
   };
 
   const handleModeChange = (hushMode) => {
-    const wasPlaying = isPlaying;
     handleHushModeChange(hushMode);
-    const processedText = processText(text, cpm, volume);
-    setCode(processedText);
-
-    // if it was playing, restart playback with new code
-    if (wasPlaying) {
-      setTimeout(() => {
-        restartPlayback(wasPlaying);
-      }, 100);
-    }
   };
 
   const handlePresetLoad = (preset) => {

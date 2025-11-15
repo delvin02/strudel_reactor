@@ -69,6 +69,23 @@ all(x => x.gain({VOLUME}))`,
   timestamp: 0,
 };
 
+const HUSH_PRESET = {
+  volume: 0.7,
+  text: `setcps(0.7);
+
+  <p1_Radio>p1: n("0 2 4 6 7 6 4 2")
+    .scale("<c3:major>/2")
+    .s("supersaw")
+    .distort(0.7)
+    .superimpose((x) => x.detune("<0.5>"))
+    .lpenv(perlin.slow(3).range(1, 4))
+    .lpf(perlin.slow(2).range(100, 2000))
+    .gain(0.3);
+  p2: "<a1 e2>/8".clip(0.8).struct("x*8").s("supersaw").note()
+  all(x => x.gain({VOLUME}))`,
+  timestamp: 0,
+};
+
 export function usePresets() {
   const [presets, setPresets] = useState(() => {
     const saved = localStorage.getItem("strudel-presets");
@@ -81,8 +98,8 @@ export function usePresets() {
       updatedPresets.TheRhythmOfTheNight = DEFAULT_PRESET;
     }
 
-    // Add Delvin preset if it doesn't exist
     updatedPresets.Delvin = DELVIN_PRESET;
+    updatedPresets.HushPreset = HUSH_PRESET;
 
     if (
       Object.keys(updatedPresets).length > Object.keys(parsedPresets).length
